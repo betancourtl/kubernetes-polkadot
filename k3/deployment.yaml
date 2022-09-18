@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: polkadot
+  namespace: mainnet
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: polkadot
+  template:
+    metadata:
+      labels:
+        app: polkadot
+    spec:
+      volumes:
+        - name: polkadot
+          persistentVolumeClaim:
+            claimName: polkadot
+      containers:
+        - name: polkadot
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsUser: 0
+          image: parity/polkadot:latest
+          command:
+            - polkadot
+          args:
+            - --validator
+            - --name
+            - BEST1
+            - --chain
+            - polkadot
+            - --pruning
+            - "1000"
+            - --database
+            - paritydb
+            - --wasm-execution
+            - compiled
+            - --prometheus-external
+          resources:
+            requests:
+              memory: "16Gi"
+              cpu: "4"
+            limits:
+              memory: "24Gi"
+              cpu: "8"
+          ports:
+            - name: p2p
+              containerPort: 30333
+            - name: http-rpc
+              containerPort: 9933
+            - name: ws-rpc
+              containerPort: 9944
+            - name: prometheus
+              containerPort: 9615
+          volumeMounts:
+            - name: polkadot
+              mountPath: /data
+              subPath: data
